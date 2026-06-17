@@ -94,12 +94,6 @@ button{font-family:var(--serif);cursor:pointer;border:none;background:none;color
 .ic{width:30px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:15px;color:var(--smoke-dim);}
 .ic.off{opacity:.4;}
 
-/* hint */
-#hint{position:fixed;left:50%;bottom:calc(var(--sb) + 58px);z-index:18;transform:translateX(-50%);
-  font-size:12px;letter-spacing:.34em;color:var(--smoke-faint);opacity:0;transition:opacity 1.4s ease;
-  text-align:center;pointer-events:none;animation:hintpulse 3.6s ease-in-out infinite;}
-#hint.show{opacity:.7;}
-@keyframes hintpulse{0%,100%{opacity:.32;}50%{opacity:.7;}}
 
 /* veil: start + end */
 .veil{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -120,7 +114,7 @@ button{font-family:var(--serif);cursor:pointer;border:none;background:none;color
 
 @media (prefers-reduced-motion:reduce){
   .c{filter:none !important;transform:none !important;}
-  #incense .tip,.veil .go,#hint{animation:none;}
+  #incense .tip,.veil .go{animation:none;}
 }
 </style>
 </head>
@@ -133,13 +127,11 @@ button{font-family:var(--serif);cursor:pointer;border:none;background:none;color
 <header id="top" hidden>
   <span class="brand">臨書</span>
   <span class="scenelab" id="scenelab"></span>
-  <button class="ic sp" id="voice" aria-label="声">🔈</button>
+  <button class="ic sp off" id="voice" aria-label="声">🔇</button>
   <button class="ic" id="play" aria-label="自動">⏸</button>
 </header>
 
 <div id="stage" hidden></div>
-<div id="hint">ふれて、つぎへ</div>
-
 <div class="veil" id="start">
   <div class="kick">七つの声と、ひとつの箱</div>
   <h1 class="title"><ruby>臨書<rt>りんしょ</rt></ruby></h1>
@@ -356,7 +348,7 @@ function buildScene(beat){
 }
 
 /* ---------------- sequencer ---------------- */
-let idx=-1, cur=null, playing=!RM, timer=0, transitioning=false, voiceOn=true;
+let idx=-1, cur=null, playing=!RM, timer=0, transitioning=false, voiceOn=false;
 const ENTER=1500;
 function dwellFor(beat){
   if(beat.kind==="scene")return 2200;
@@ -441,7 +433,7 @@ function speak(t){ if(!speakable||!voiceOn)return; stopSpeak();
 function stopSpeak(){ if(speakable)speechSynthesis.cancel(); speaking=null; }
 
 /* ---------------- controls ---------------- */
-const topBar=document.getElementById("top"), hint=document.getElementById("hint");
+const topBar=document.getElementById("top");
 let liveT=0;
 function flashControls(){topBar.classList.add("live");clearTimeout(liveT);liveT=setTimeout(()=>topBar.classList.remove("live"),2600);}
 // a drag/touch stirs the smoke; a clean tap advances
@@ -460,8 +452,7 @@ playBtn.addEventListener("click",e=>{e.stopPropagation();playing=!playing;playBt
 const voiceBtn=document.getElementById("voice");
 voiceBtn.addEventListener("click",e=>{e.stopPropagation();voiceOn=!voiceOn;voiceBtn.textContent=voiceOn?"🔈":"🔇";voiceBtn.classList.toggle("off",!voiceOn);if(!voiceOn)stopSpeak();flashControls();});
 let hintShown=false;
-function showHint(){if(hintShown)return;hintShown=true;setTimeout(()=>hint.classList.add("show"),1400);}
-function hideHint(){hint.classList.remove("show");}
+function showHint(){} function hideHint(){} // the "ふれて、つぎへ" prompt was removed
 
 /* ---------------- start / end ---------------- */
 function finish(){
