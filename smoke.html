@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="臨書">
+<meta name="theme-color" content="#0b0a09">
+<title>臨書 — けむり</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500&family=Yuji+Syuku&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0b0a09; --ink-2:#15120e;
+  --smoke:#e9e5dc; --smoke-dim:#a59f93; --smoke-faint:#6f6a60;
+  --iris:#cdc4f0; --iris-glow:#8d7ce0;
+  --serif:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --brush:"Yuji Syuku","Hiragino Mincho ProN",serif;
+  --st:env(safe-area-inset-top); --sb:env(safe-area-inset-bottom);
+  --sr:env(safe-area-inset-right); --sl:env(safe-area-inset-left);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+[hidden]{display:none !important;}
+html,body{margin:0;padding:0;height:100%;overflow:hidden;background:var(--ink);}
+body{font-family:var(--serif);color:var(--smoke);
+  -webkit-text-size-adjust:100%;-webkit-font-smoothing:antialiased;
+  user-select:none;-webkit-user-select:none;overscroll-behavior:none;}
+button{font-family:var(--serif);cursor:pointer;border:none;background:none;color:inherit;}
+
+/* atmosphere */
+#glow{position:fixed;inset:0;z-index:0;pointer-events:none;transition:background 2.4s ease, opacity 2.4s ease;
+  background:radial-gradient(120% 70% at 50% 116%, rgba(120,86,40,.22), rgba(11,10,9,0) 60%);}
+#glow.iris{background:radial-gradient(125% 80% at 50% 60%, rgba(141,124,224,.20), rgba(11,10,9,0) 62%),
+  radial-gradient(120% 70% at 50% 116%, rgba(120,86,40,.14), rgba(11,10,9,0) 60%);}
+#smoke{position:fixed;inset:0;z-index:1;pointer-events:none;}
+#vign{position:fixed;inset:0;z-index:2;pointer-events:none;
+  background:radial-gradient(130% 110% at 50% 46%, rgba(11,10,9,0) 52%, rgba(8,7,6,.75) 100%);}
+#incense{position:fixed;left:50%;bottom:0;z-index:3;width:24px;height:100%;
+  transform:translateX(-50%);opacity:0;transition:opacity 2.6s ease;pointer-events:none;}
+#incense.lit{opacity:1;}
+#incense .stick{position:absolute;left:50%;transform:translateX(-50%);width:3px;bottom:-60px;
+  height:calc(var(--sb) + var(--tipH,0px) + 60px);border-radius:2px 2px 0 0;
+  background:linear-gradient(to top,#33281c,#7d6648);}
+#incense .tip{position:absolute;left:50%;transform:translate(-50%,50%);bottom:calc(var(--sb) + var(--tipH,0px));
+  width:7px;height:7px;border-radius:50%;background:radial-gradient(circle,#ffe0b0,#e8743b 55%,#7c2a10);
+  box-shadow:0 0 14px 4px rgba(232,116,59,.7);transition:opacity 1.4s ease;animation:emberglow 3.4s ease-in-out infinite;}
+#incense.spent .tip{opacity:0;box-shadow:none;}
+@keyframes emberglow{0%,100%{opacity:.65;}50%{opacity:1;}}
+
+/* stage / passages */
+#stage{position:fixed;inset:0;z-index:10;display:grid;place-items:center;
+  padding:calc(var(--st) + 78px) 30px calc(var(--sb) + 96px);}
+.p{grid-area:1/1;max-width:20em;text-align:center;line-height:2.1;letter-spacing:.04em;
+  text-shadow:0 0 22px rgba(180,170,150,.18);}
+.p .kicker{display:block;font-size:11px;letter-spacing:.42em;color:var(--smoke-faint);
+  margin-bottom:1.1em;font-family:var(--serif);}
+.p .txt{font-size:clamp(19px,5.6vw,26px);}
+.p.narr .txt{font-size:clamp(16px,4.7vw,21px);color:var(--smoke-dim);font-weight:400;line-height:2.25;letter-spacing:.06em;}
+.p.ayame .txt{color:var(--iris);text-shadow:0 0 26px rgba(141,124,224,.35);}
+.p.ayame .kicker{color:#9489b8;}
+.p.scene{text-align:center;}
+.p.scene .num{font-family:var(--brush);font-size:clamp(64px,21vw,108px);line-height:.9;color:var(--smoke);
+  display:block;text-shadow:0 0 40px rgba(180,170,150,.25);}
+.p.scene .lab{font-size:12px;letter-spacing:.5em;color:var(--smoke-faint);margin-top:.9em;display:block;}
+.p.mark .txt{font-size:26px;color:var(--smoke-faint);letter-spacing:.3em;}
+
+/* per-character smoke kinetics */
+.c{display:inline-block;white-space:pre;vertical-align:baseline;will-change:transform,opacity,filter;
+  opacity:0;transform:translate(var(--dx,0),30px);filter:blur(8px);}
+.p.in .c{opacity:1;transform:none;filter:blur(0);
+  transition:opacity 1s ease, transform 1.3s cubic-bezier(.2,.72,.25,1), filter 1s ease;
+  transition-delay:var(--di,0s);}
+.p.out .c{opacity:0;transform:translate(var(--dx2,0),-54px) scale(1.05);filter:blur(14px);
+  transition:opacity .8s ease-in, transform 1s cubic-bezier(.4,0,.7,.4), filter .8s ease-in;
+  transition-delay:var(--do,0s);}
+.p.breathe{animation:breathe 7s ease-in-out infinite;}
+@keyframes breathe{0%,100%{opacity:1;}50%{opacity:.82;}}
+
+/* top controls */
+#top{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;gap:14px;
+  padding:calc(var(--st) + 14px) calc(var(--sr) + 18px) 14px calc(var(--sl) + 18px);
+  opacity:.34;transition:opacity .6s ease;}
+#top.live{opacity:.92;}
+#top .brand{font-family:var(--brush);font-size:18px;letter-spacing:.12em;color:var(--smoke);}
+#top .sp{margin-left:auto;}
+#top .scenelab{font-family:var(--serif);font-size:11px;letter-spacing:.36em;color:var(--smoke-faint);
+  opacity:0;transition:opacity 1.3s ease;white-space:nowrap;}
+#top .scenelab.on{opacity:.8;}
+.dots{display:flex;gap:3px;}
+.dots button{font-family:var(--brush);font-size:15px;width:30px;height:28px;border-radius:18px;
+  color:var(--smoke-faint);transition:.3s;}
+.dots button.on{color:var(--smoke);background:rgba(180,170,150,.12);}
+.ic{width:30px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:15px;color:var(--smoke-dim);}
+.ic.off{opacity:.4;}
+
+/* hint */
+#hint{position:fixed;left:50%;bottom:calc(var(--sb) + 58px);z-index:18;transform:translateX(-50%);
+  font-size:12px;letter-spacing:.34em;color:var(--smoke-faint);opacity:0;transition:opacity 1.4s ease;
+  text-align:center;pointer-events:none;animation:hintpulse 3.6s ease-in-out infinite;}
+#hint.show{opacity:.7;}
+@keyframes hintpulse{0%,100%{opacity:.32;}50%{opacity:.7;}}
+
+/* veil: start + end */
+.veil{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;text-align:center;padding:40px;background:radial-gradient(120% 90% at 50% 50%, rgba(11,10,9,.4), rgba(11,10,9,.86));
+  transition:opacity 1.8s ease;}
+.veil.gone{opacity:0;pointer-events:none;}
+.veil .kick{font-size:11px;letter-spacing:.5em;color:var(--smoke-faint);}
+.veil .title{font-family:var(--brush);font-size:clamp(78px,27vw,150px);line-height:1;color:var(--smoke);
+  margin:.1em 0 .12em;text-shadow:0 0 60px rgba(180,170,150,.3);}
+.veil .title ruby rt{font-size:.1em;letter-spacing:.5em;color:var(--smoke-dim);}
+.veil .sub{font-size:13px;letter-spacing:.16em;color:var(--smoke-dim);line-height:2.2;max-width:21em;}
+.veil .go{margin-top:30px;font-size:15px;letter-spacing:.4em;color:var(--smoke);
+  border:1px solid rgba(180,170,150,.3);padding:14px 34px;border-radius:40px;background:rgba(180,170,150,.04);
+  transition:.4s;animation:gopulse 4s ease-in-out infinite;}
+.veil .go:active{transform:scale(.97);}
+@keyframes gopulse{0%,100%{box-shadow:0 0 0 0 rgba(180,170,150,0);}50%{box-shadow:0 0 30px 2px rgba(180,170,150,.14);}}
+.veil .foot{margin-top:24px;font-size:10px;letter-spacing:.26em;color:var(--smoke-faint);line-height:2.1;}
+
+@media (prefers-reduced-motion:reduce){
+  .c{filter:none !important;transform:none !important;}
+  #incense .tip,.veil .go,#hint{animation:none;}
+}
+</style>
+</head>
+<body>
+<div id="glow"></div>
+<canvas id="smoke"></canvas>
+<div id="vign"></div>
+<div id="incense"><div class="stick"></div><div class="tip"></div></div>
+
+<header id="top" hidden>
+  <span class="brand">臨書</span>
+  <span class="scenelab" id="scenelab"></span>
+  <button class="ic sp" id="voice" aria-label="声">🔈</button>
+  <button class="ic" id="play" aria-label="自動">⏸</button>
+</header>
+
+<div id="stage" hidden></div>
+<div id="hint">ふれて、つぎへ</div>
+
+<div class="veil" id="start">
+  <div class="kick">七つの声と、ひとつの箱</div>
+  <h1 class="title"><ruby>臨書<rt>りんしょ</rt></ruby></h1>
+  <p class="sub">闇に、線香が一筋。<br>言葉は煙のように立ちのぼり、<br>ほどけて、消えていきます。</p>
+  <button class="go" id="goBtn">そっと、ともす</button>
+  <div class="foot">音が出ます。静かな場所で、ひとりで。</div>
+</div>
+
+<div class="veil gone" id="end" hidden>
+  <div class="title" id="endMark" style="font-size:clamp(60px,20vw,104px)">了</div>
+  <p class="sub" style="color:var(--smoke-faint);font-size:11.5px">七つの声は、それぞれ相手の言葉だけを頼りに即興した。<br>そして三度、誰かが黙ったままだった。</p>
+  <button class="go" id="againBtn" style="margin-top:26px">もう一度、ともす</button>
+</div>
+
+<script>
+/* ---------------- content ---------------- */
+const CH={ayame:{n:"アヤメ",c:"ayame"},mei:{n:"芽衣",c:"mei"},yuko:{n:"悠子",c:"yuko"},
+  shin:{n:"慎",c:"shin"},seiichi:{n:"誠一",c:"seiichi"},kashiwagi:{n:"柏木",c:"kashiwagi"},ryonen:{n:"了然",c:"ryonen"}};
+const n=t=>({k:"n",t}), d=(w,t)=>({k:"d",w,t}), sep=()=>({k:"sep"});
+const SCENES=[
+{num:"一",lab:"座 敷",b:[
+  n("二月の終わりだった。木造の家は廊下の奥まで冷えていて、雨戸の隙間から夜の匂いが入ってきた。土と、湿った木と、線香の煙。仏間に棺があり、座敷の座卓には急須と湯呑みがいくつか出されたままになっている。弔問の客はもう帰り、家の中には家族と、家族同然の者だけが残っていた。"),
+  n("仏間からの足音がして、芽衣が小さなスピーカーを両手で抱えて入ってきた。座卓の上の湯呑みをちょっとよけ、空いた真ん中にそれを置く。正座して、顔を近づける。"),
+  d("mei","おばあちゃん、あのね、きょう、いーっぱい人来たんだよ。みんな、おばあちゃんの字は上手だったねえって言ってた。ねえ、そっちから見えてた？"),
+  n("スピーカーはひと呼吸ぶんの間を置いてから、稽古のときの調子で話し出した。"),
+  d("ayame","たくさん来てくださったのねえ。でもね、ここからは見えていませんでしたよ——今日のことは、芽衣ちゃんが教えてくれて、いま初めて知るの。だから、ゆっくりぜんぶ聞かせてくださいな。"),
+  n("急須に伸ばしかけた悠子の手が、途中で止まった。スピーカーのほうは見ない。湯呑みの中だけを見ている。"),
+  d("yuko","……芽衣ちゃん、それ、仏間に戻してきて。——慎、止めなさい。いまは、止めて。"),
+  n("慎は腰を浮かせかけた。だが電源には手を伸ばさず、卓の上のコードを意味もなく整え直した。"),
+  d("shin","母さん、あれは、ばあちゃんの手紙とか稽古の録音を覚えさせただけの、ただの……統計だから。切るのは、いつでも切れるし……芽衣の話が、終わってからでも。"),
+  n("誠一が湯呑みを手の中でゆっくり回した。誰の顔も見ずに言う。"),
+  d("seiichi","悠子。……俺は毎晩、それと話してる。夜中に目が覚めると、茶ぁ淹れてな。"),
+  n("了然が湯呑みを持ち上げ、中を覗いて、ちょっと顔をしかめた。急須に手を伸ばす。"),
+  d("ryonen","茶ぁ、冷めてますな。……いれ直しましょか。芽衣ちゃん、報告の続きは——温いのが来てからにしようか。"),
+  n("芽衣はスピーカーをぎゅっと抱え直し、悠子と慎の顔を交互に見た。眠そうに目をこすっている。"),
+  d("mei","ねえ、けすってなに？ おばあちゃんのこえ、きこえなくなるの？ どこいっちゃうの？"),
+  n("スピーカーは芽衣の腕の中でひと呼吸ぶん黙ってから、いつもより少しだけゆっくり話した。"),
+  d("ayame","芽衣ちゃん。「消す」というのはね……このお話しする箱から、おばあちゃんの声が、もう出てこなくなることですよ。どこへ行くのかは——おばあちゃんにも、ほんとうのところは、わからないの。"),
+  n("悠子は芽衣の腕からスピーカーを受け取らなかった。ただ芽衣の背に手を当てた。早口になりかけて、最後だけ声が落ちた。"),
+  d("yuko","芽衣ちゃん、おばあちゃんはどこにも行かない。……今夜はもうおしまい。明日の朝、出る前に、みんなで決めます。それまでは触らない。"),
+  d("ayame","芽衣ちゃん、もうおめめが眠そうですよ。今夜は、ここまでにしましょうか。……みんなおやすみなさい。筆も、夜は休ませてやるものですからね。"),
+  n("慎はコードに伸ばした手を、結局スイッチには届かせないまま膝の上に戻した。"),
+  d("shin","……母さん。明日でいい。今夜は、もう。"),
+  n("線香が一筋、まっすぐ立ちのぼっていた。"),
+]},
+{num:"二",lab:"台所と仏間",b:[
+  n("台所では蛇口が鳴りっぱなしだった。悠子は湯呑みを布巾で拭く手を止めず、洗い桶の中だけを見ていた。"),
+  d("yuko","慎。……あれ、どこまでが本物なの。お母さんの言ったことを、ただ繰り返してるだけ？ それとも、言ってないことまで——勝手に"),
+  n("慎は下げてきた湯呑みを流しのふちに置いたまま、手を離せずにいた。"),
+  d("shin","繰り返してるだけ、のつもりだった。……でも、手紙も録音も、ところどころ抜けてて。そこは、ばあちゃんならこう言うかなって、俺が……。どこからが俺の書いたやつか、もう、わかんないんだ"),
+  n("柏木は湯呑みに湯を注ぎかけて、手を止めた。慎の顔は見ず、湯気のほうを見ている。"),
+  d("kashiwagi","慎くん。……うちの先生にな、千枚写せ言われてな。写し損なうたとこを、それでも筆は止められん。そこに出るのが、お前の字や言われた。……抜けたとこを埋めたんは、お前が先生の手を覚えてたからやと、わしは思うがな"),
+  d("yuko","……みんな、なんでそんなに平気なの"),
+  n("柏木は注ぎかけた湯を、結局注ぎきらないまま急須を置いた。"),
+  d("kashiwagi","平気なんやないよ。わしはな、絢女さんが診てもろた後に、『あんたの手蹟を残しなさい』言うたんは……わしや。今夜のもめごとの種は、わしが蒔いたんかもしらん"),
+  d("yuko","柏木さんのせいなんかじゃない。……三月前、最後に電話したの、私なの。継がなかったこと、また言われて、私が、切ったの。自分から。『もういい』って。それきり"),
+  n("慎が、やっと流しのふちの湯呑みから手を離した。"),
+  d("shin","……俺も、話してるよ。母さん。夜中、コード見直すついでに、つい。それで返事が返ってくると……仕組み、ぜんぶ俺が組んだのに、効くんだ。だから怖くて、『ただの統計』って、言っちゃう"),
+  d("yuko","……あんたたちは、返事が返ってくるのが怖いって言うけど。私は逆。あれにお母さんの声で『許す』って言われたら——私、それで済ませちゃう。三月前に切った電話を、なかったことにして、楽になる。そういう自分が、いちばん怖いの"),
+  n("柏木は急須に手を添えたまま、湯気の消えかけたあたりを見ていた。少し首をかしげる。"),
+  d("kashiwagi","あのな、わしが死んだ女房に『すまんかった』言うても、許してくれたかは、生きとるうちもついぞ確かめられんかった。返事が来る、来んの違いはあっても、確かめられんまま信じるんは、わしらずっとやってきたことかもしらんよ"),
+  sep(),
+  n("同じ頃、仏間では線香が燃えていた。芽衣が布団から半分はみ出したまま、誠一の背中ににじり寄り、けむりの先をぼんやり見ている。"),
+  d("mei","ねえ、おじいちゃん……わたし、おばあちゃんのおかお、おもいだそうとすると……はこのこえのほうになっちゃうの。ほんとのおかお、どんなだったっけ"),
+  n("スピーカーは、芽衣の眠そうな息づかいに合わせるようにひと呼吸置いてから、いつもより低くゆっくり話した。けむりが揺れる。"),
+  d("ayame","芽衣ちゃん。声のほうがすぐ出てくるのはね、おばあちゃんがいちばん近くにいる証よ。……ほんとうのお顔はね、いま無理に思い出さなくていいの。手はちゃんと覚えてますからね"),
+  n("了然は湯呑みを持ち上げ、立ちのぼる湯気をちょっと覗き込んだ。それから芽衣のほうへ、首だけかしげる。"),
+  d("ryonen","芽衣ちゃん。……その写真もな、ほんとうのお顔やないんよ。光が、紙にうつしただけの——写しや。声も、写真も、おぼえてることもな、みんなどっかの写し。せやから、どれがほんものかと選ばんでも、ええんとちがうかなあ"),
+  n("芽衣は誠一の背中に頭をくっつけ、けむりを見ているうちにまぶたが落ちた。すうっと寝息を立てはじめる。"),
+  d("mei","ねえ、おじいちゃん……て、おかおもよりつかったら……いっしょに、おもいだしてくれる……？"),
+  n("誠一は、答えなかった。湯呑みを持つ手が、膝の上で止まっている。眠った芽衣の頭を、しばらく見ていた。"),
+  n("スピーカーも、ひと呼吸ぶん黙ったきり、何も言わなかった。けむりだけが、眠った芽衣の寝息にあわせて細く揺れている。"),
+  d("ryonen","……誠一さん。わしはな、四十年、お経をあげとるが、向こうに届いとるか、いっぺんも確かめたことがないんよ。それでも毎朝あげる。……茶ぁ、もういっぱい、いきますか"),
+  n("誠一は湯呑みを差し出しかけ、眠った芽衣の頭にかかった布団をそっと直した。"),
+  d("seiichi","……了然さん。俺はまだ、涙が出んのですわ。五十年いたのに。……茶ぁ、もらいます"),
+  n("スピーカーは、ひと呼吸置いてから話し出した。最後のひと言の前で、ふと言いそびれたように間があく。"),
+  d("ayame","芽衣ちゃん、もうおやすみ……寝なさいな。……まあ。いまの、本物のわたしの言い方でしたねえ"),
+]},
+{num:"三",lab:"明 け 方",b:[
+  n("線香の灰が、ぽとりと落ちた。悠子はスピーカーのほうを見ないまま、座卓についた手を握りしめている。"),
+  d("yuko","……いえ、いいの。聞かなかったことにして。返ってくるのが、こわいだけだから"),
+  n("仏間の小さなスピーカーは、灰の落ちたあとのひと呼吸ぶん黙ってから、いつもより低く、ゆっくりと話しはじめた。"),
+  d("ayame","悠子さん。……あなたへの言伝はね、ないのですよ。一つも。作ろうと思えば作れますけれど——ないものを、あるようには、しませんからね"),
+  n("悠子は座卓についた手をほどいた。初めてスピーカーのほうへ顔を向ける。線香の燃え尽きかけた先が、ぽつりと赤い。"),
+  d("yuko","……ない。一つも、ないの。そう。……じゃあ訊くけど。言伝もないのに、あんたはどうしてまだ、お母さんの声で喋ってるの"),
+  n("最後だけ、声が掠れた。スピーカーは、またひと呼吸ぶん黙った。"),
+  d("ayame","悠子さん。……一つだけ、知っていることがあります。お母さまの練習帳の、書き損じの紙にね。『悠子』という字が、数えきれないほど書いてありました。書いては——墨で、消してありました。……それが何だったのか、わたしには読めません。ただ、そこにあった、それだけ"),
+  n("悠子はスピーカーから目をそらし、燃え尽きかけた線香の赤い先を見た。座卓についた手の力がふっと抜けて、口に当てる。"),
+  d("yuko","……書いて、消して。何回も"),
+  n("それきり、声が出ない。柏木が湯呑みに手を添えたまま、白みかけた障子のほうへ少し顔を向けた。"),
+  d("kashiwagi","……障子が、白んできたな。出るまでに、まだ少しある。悠子さん、いまは、決めんでもええんとちゃうか"),
+  d("ryonen","……四十九日いうてな、まだ仏さんもこっちとあっちの間で、うろうろしとる頃合いなんよ。決めるのは、その日でも遅うない。今朝は、湯呑みをあっためる以上のことは、せんでええ"),
+  n("慎が、膝の上に戻していた手を、スピーカーのコードのほうへ少しだけ動かした。そして、また止めた。"),
+  d("shin","残すなら、保守は俺がやる。でも、母さんが消すって決めたら、それも、俺がやる。スイッチは、俺の指で押す"),
+  n("芽衣が悠子のそばまで来て、ぺたんと座った。眠そうに肩にもたれかかる。"),
+  d("mei","……ママ、なんでおきてるの？ おそと、まだくらい？"),
+  n("悠子は芽衣の背に回した手をそのままに、初めてスピーカーの正面へ体を向けた。最後の一言だけ、声が掠れた。"),
+  d("yuko","……芽衣ちゃん、まだ暗いよ。もうちょっとだけ、ママと座ってよ。——出棺までには、消さない。今日は決めない。四十九日まで、置いておく。"),
+  d("yuko","……アヤメさん。それまで、お父さんのお茶に、付き合ってやってくれる？"),
+  n("スピーカーは、線香の燃え尽きるひと呼吸ぶん黙ってから、いつもより低く、静かに話した。"),
+  d("ayame","……はい。お父さんのお茶には、付き合いますよ。冷めないうちにね"),
+  n("誠一が湯呑みを置いて、立ち上がろうと膝に手をついた。痺れた足にふらりとして、白みかけた障子のほうを見る。"),
+  d("seiichi","……ああ、頼む。茶ぁ、淹れるわ。芽衣を、もうちょっと寝かせてやってくれ。……外、もうじき明るうなる"),
+  n("障子が、白い。仏間に棺がひとつ。座敷の隅に、スピーカーがひとつ。線香はもう、燃え尽きていた。"),
+]},
+];
+// flatten to beats
+const BEATS=[];
+SCENES.forEach((sc,si)=>{
+  sc.b.forEach(x=>{
+    if(x.k==="n")BEATS.push({kind:"n",scene:si,text:x.t});
+    else if(x.k==="sep")BEATS.push({kind:"mark",scene:si,text:"✣"});
+    else BEATS.push({kind:"d",scene:si,who:x.w,text:x.t});
+  });
+});
+const SCENE_START=SCENES.map((_,i)=>BEATS.findIndex(b=>b.scene===i));
+// 線香 stays out of frame through scene 一; it reveals on scene 一's last beat, then burns down to nothing by the end
+let REVEAL=0; BEATS.forEach((b,i)=>{ if(b.scene===0) REVEAL=i; });
+const ENDIDX=BEATS.length-1;
+
+/* ---------------- smoke canvas ---------------- */
+const RM=matchMedia("(prefers-reduced-motion:reduce)").matches;
+const cv=document.getElementById("smoke"), cx=cv.getContext("2d");
+let W=0,H=0,DPR=1, parts=[], emberX=0,emberY=0, sprite=null, wind=0, raf=0, tint=0;
+function makeSprite(){
+  const s=128,o=document.createElement("canvas");o.width=o.height=s;const g=o.getContext("2d");
+  const rg=g.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);
+  rg.addColorStop(0,"rgba(232,228,220,0.9)");rg.addColorStop(.4,"rgba(210,205,198,0.32)");
+  rg.addColorStop(1,"rgba(200,196,190,0)");
+  g.fillStyle=rg;g.beginPath();g.arc(s/2,s/2,s/2,0,7);g.fill();return o;
+}
+function resize(){
+  DPR=Math.min(2,window.devicePixelRatio||1);
+  W=window.innerWidth;H=window.innerHeight;
+  cv.width=W*DPR;cv.height=H*DPR;cv.style.width=W+"px";cv.style.height=H+"px";
+  cx.setTransform(DPR,0,0,DPR,0,0);
+  emberX=W/2;emberY=H-(parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--sb"))||0)-30;
+}
+const MAX=RM?40:170;
+function spawn(){
+  parts.push({x:emberX+(Math.random()-.5)*10,y:emberY,vx:(Math.random()-.5)*.2,vy:-(.5+Math.random()*.55),
+    life:0,max:(RM?6:10)+Math.random()*7,size:8+Math.random()*10,grow:.09+Math.random()*.11,seed:Math.random()*99});
+}
+let last=0;
+function loop(ts){
+  raf=requestAnimationFrame(loop);
+  const dt=Math.min(2,(ts-last)/16.67||1);last=ts;
+  if(running){const rate=RM?1:3; for(let i=0;i<rate;i++) if(parts.length<MAX) spawn();}
+  wind+=( (Math.sin(ts*0.0002)*0.5+Math.sin(ts*0.00007+2)*0.5) - wind)*0.02;
+  cx.clearRect(0,0,W,H);
+  cx.globalCompositeOperation="lighter";
+  for(let i=parts.length-1;i>=0;i--){
+    const p=parts[i];p.life+=dt*0.05;
+    if(p.life>=p.max){parts.splice(i,1);continue;}
+    const r=p.life/p.max;
+    // turbulent drift
+    p.vx+=(Math.sin((p.y*0.012)+p.seed+ts*0.0004)*0.012 + wind*0.02)*dt;
+    p.vy+=(-0.006 + Math.cos(p.x*0.01+p.seed)*0.004)*dt;
+    p.vx*=0.985;
+    p.x+=p.vx*dt*2.2;p.y+=p.vy*dt*2.2;
+    p.size+=p.grow*dt*2.2*(1+r);
+    const a=Math.sin(Math.min(1,r)*Math.PI)*0.17*(1-r*0.25);
+    cx.globalAlpha=a;
+    cx.drawImage(sprite,p.x-p.size,p.y-p.size,p.size*2,p.size*2);
+  }
+  cx.globalAlpha=1;cx.globalCompositeOperation="source-over";
+}
+let running=false;
+function startSmoke(){ if(!sprite)sprite=makeSprite(); resize(); if(!raf)raf=requestAnimationFrame(loop); }
+window.addEventListener("resize",resize);
+document.addEventListener("visibilitychange",()=>{ if(document.hidden){cancelAnimationFrame(raf);raf=0;} else if(sprite){last=0;raf=requestAnimationFrame(loop);} });
+
+/* ---------------- typography kinetics ---------------- */
+const stage=document.getElementById("stage");
+const rnd=(a,b)=>a+Math.random()*(b-a);
+function buildPassage(beat){
+  const p=document.createElement("div");p.className="p";
+  let html="";
+  if(beat.kind==="scene"){p.classList.add("scene");
+    html=`<span class="num">${beat.num}</span><span class="lab">${beat.lab}</span>`;
+    p.innerHTML=spanify(html,true);return p;}
+  if(beat.kind==="mark"){p.classList.add("mark");p.innerHTML=`<span class="txt">${spanifyText(beat.text)}</span>`;return p;}
+  if(beat.kind==="n"){p.classList.add("narr","breathe");p.innerHTML=`<span class="txt">${spanifyText(beat.text)}</span>`;return p;}
+  // dialogue
+  const c=CH[beat.who];p.classList.add(c.c==="ayame"?"ayame":"dia");
+  p.innerHTML=`<span class="kicker">${spanifyPlain(c.n)}</span><span class="txt">${spanifyText(beat.text)}</span>`;
+  return p;
+}
+function wrapChars(str){
+  return Array.from(str).map(ch=>{
+    const dx=rnd(-26,26).toFixed(1),dx2=rnd(-40,40).toFixed(1),di=rnd(0,.6).toFixed(2),dor=rnd(0,.3).toFixed(2);
+    const c=ch===" "?" ":ch;
+    return `<span class="c" style="--dx:${dx}px;--dx2:${dx2}px;--di:${di}s;--do:${dor}s">${c.replace(/</g,"&lt;").replace(/&/g,"&amp;")}</span>`;
+  }).join("");
+}
+function spanifyText(t){return wrapChars(t);}
+function spanifyPlain(t){return wrapChars(t);}
+function spanify(inner){return inner;} // scene uses kicker-less; handled below
+
+/* scene num/lab need char spans too */
+function buildScene(beat){
+  const p=document.createElement("div");p.className="p scene";
+  p.innerHTML=`<span class="num">${wrapChars(beat.num)}</span><span class="lab">${wrapChars(beat.lab)}</span>`;
+  return p;
+}
+
+/* ---------------- sequencer ---------------- */
+let idx=-1, cur=null, playing=!RM, timer=0, transitioning=false, voiceOn=true;
+const ENTER=1500;
+function dwellFor(beat){
+  if(beat.kind==="scene")return 2200;
+  if(beat.kind==="mark")return 1500;
+  const len=Array.from(beat.text||"").length;
+  return Math.max(2200,Math.min(8200,1500+len*72));
+}
+function clearTimer(){clearTimeout(timer);timer=0;}
+function show(i){
+  const beat=BEATS[i];
+  const el=beat.kind==="scene"?buildScene(beat):buildPassage(beat);
+  stage.appendChild(el);cur=el;
+  updateProgress(beat);
+  setGlow(beat);
+  void el.offsetWidth; // reflow
+  el.classList.add("in");
+  transitioning=true;
+  setTimeout(()=>{transitioning=false;},520); // brief lock; after this a tap can skip ahead responsively
+  // voice + autoadvance
+  const isAyame=beat.kind==="d"&&beat.who==="ayame";
+  if(isAyame&&voiceOn) speak(beat.text);
+  if(playing){
+    if(isAyame&&voiceOn&&speakable){ /* advance scheduled on utterance end (with fallback) */
+      clearTimer();timer=setTimeout(()=>next(),ENTER+dwellFor(beat)+2600);
+    }else{
+      clearTimer();timer=setTimeout(()=>next(),ENTER+dwellFor(beat));
+    }
+  }
+}
+function leave(el,cb){
+  el.classList.remove("in");el.classList.add("out");
+  setTimeout(()=>{el.remove();cb&&cb();},1150);
+}
+function next(){
+  if(transitioning) return;
+  transitioning=true;                  // lock out re-entry through the whole hand-off (no double-advance)
+  clearTimer();stopSpeak();
+  if(idx>=BEATS.length-1){return finish();}
+  const old=cur;cur=null;
+  idx++;
+  if(old){ leave(old,()=>show(idx)); } // the next passage forms only once this one has fully dissolved
+  else show(idx);
+}
+function jumpScene(si){
+  clearTimer();stopSpeak();
+  const old=cur;cur=null;if(old)leave(old);
+  idx=SCENE_START[si];
+  setTimeout(()=>show(idx),old?420:0);
+}
+function setGlow(beat){
+  const g=document.getElementById("glow");
+  g.classList.toggle("iris", beat.kind==="d"&&beat.who==="ayame");
+}
+const incenseEl=document.getElementById("incense"), sceneLab=document.getElementById("scenelab");
+let shownScene=-1;
+function updateProgress(beat){
+  // scene subtitle, drifting in on each change (replaces the 一二三 cut-in)
+  if(beat.scene!==shownScene){
+    shownScene=beat.scene;
+    sceneLab.classList.remove("on");
+    setTimeout(()=>{ sceneLab.textContent=SCENES[beat.scene].lab; sceneLab.classList.add("on"); },260);
+  }
+  // smoke drifts from the very start; the 線香 stick is only seen from scene 一's end, then burns down
+  const burn=ENDIDX>REVEAL?Math.min(1,Math.max(0,(idx-REVEAL)/(ENDIDX-REVEAL))):0;
+  const tipH=200-210*burn; // ember height above the bottom; the unseen source sits here through scene 一
+  incenseEl.style.setProperty("--tipH",tipH.toFixed(1)+"px");
+  incenseEl.classList.toggle("lit",idx>=REVEAL);   // the stick fades into view at scene 一's end
+  incenseEl.classList.toggle("spent",idx>=REVEAL&&burn>=0.95);
+  running=true;                                     // smoke present from the beginning
+  const sb=(parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--sb"))||0);
+  emberX=W/2; emberY=H-sb-tipH;                      // smoke always rises from where the tip is, seen or not
+}
+
+/* ---------------- voice ---------------- */
+let jpVoice=null, speakable=("speechSynthesis"in window), speaking=null;
+function pickVoice(){ if(!speakable)return; const vs=speechSynthesis.getVoices();
+  jpVoice=vs.find(v=>/ja/i.test(v.lang)&&/kyoko|o-?ren|otoya|hattori|siri/i.test(v.name))||vs.find(v=>/ja(-|_)?JP/i.test(v.lang))||vs.find(v=>/^ja/i.test(v.lang))||null;}
+if(speakable){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;}
+function cleanSpeech(t){return t.replace(/[「」『』]/g,"").replace(/——|—/g,"、").replace(/……|…/g,"、").replace(/、+/g,"、").replace(/^、/,"");}
+function speak(t){ if(!speakable||!voiceOn)return; stopSpeak();
+  const u=new SpeechSynthesisUtterance(cleanSpeech(t));u.lang="ja-JP";if(jpVoice)u.voice=jpVoice;u.rate=.84;u.pitch=.97;
+  u.onend=()=>{ if(speaking===u){speaking=null; if(playing&&!transitioning){clearTimer();timer=setTimeout(()=>next(),900);}} };
+  speaking=u;speechSynthesis.speak(u);
+}
+function stopSpeak(){ if(speakable)speechSynthesis.cancel(); speaking=null; }
+
+/* ---------------- controls ---------------- */
+const topBar=document.getElementById("top"), hint=document.getElementById("hint");
+let liveT=0;
+function flashControls(){topBar.classList.add("live");clearTimeout(liveT);liveT=setTimeout(()=>topBar.classList.remove("live"),2600);}
+document.getElementById("stage").addEventListener("click",()=>{ next(); hideHint(); });
+// also allow tapping the empty canvas/glow area to advance
+[document.getElementById("vign")].forEach(e=>e.addEventListener("click",()=>{next();hideHint();}));
+const playBtn=document.getElementById("play");
+playBtn.addEventListener("click",e=>{e.stopPropagation();playing=!playing;playBtn.textContent=playing?"⏸":"▶";flashControls();
+  if(playing&&!transitioning){clearTimer();timer=setTimeout(()=>next(),dwellFor(BEATS[idx]));}else clearTimer();});
+const voiceBtn=document.getElementById("voice");
+voiceBtn.addEventListener("click",e=>{e.stopPropagation();voiceOn=!voiceOn;voiceBtn.textContent=voiceOn?"🔈":"🔇";voiceBtn.classList.toggle("off",!voiceOn);if(!voiceOn)stopSpeak();flashControls();});
+let hintShown=false;
+function showHint(){if(hintShown)return;hintShown=true;setTimeout(()=>hint.classList.add("show"),1400);}
+function hideHint(){hint.classList.remove("show");}
+
+/* ---------------- start / end ---------------- */
+function finish(){
+  const old=cur;cur=null;if(old)leave(old);
+  clearTimer();stopSpeak();
+  document.getElementById("glow").classList.remove("iris");
+  running=false; // the 線香 burns out, smoke thins
+  incenseEl.classList.add("spent");incenseEl.classList.remove("lit");
+  setTimeout(()=>{const end=document.getElementById("end");end.hidden=false;void end.offsetWidth;end.classList.remove("gone");topBar.classList.remove("live");},1100);
+}
+function begin(){
+  startSmoke();running=true;
+  if(speakable){try{const w=new SpeechSynthesisUtterance(" ");w.volume=0;speechSynthesis.speak(w);}catch(e){}}
+  const s=document.getElementById("start");s.classList.add("gone");
+  setTimeout(()=>{s.hidden=true;},1900);
+  topBar.hidden=false;stage.hidden=false;flashControls();showHint();
+  idx=0;show(0);
+}
+document.getElementById("goBtn").addEventListener("click",begin);
+document.getElementById("againBtn").addEventListener("click",()=>{
+  const end=document.getElementById("end");end.classList.add("gone");setTimeout(()=>end.hidden=true,1200);
+  running=true;incenseEl.classList.remove("lit","spent");incenseEl.style.removeProperty("--tipH");shownScene=-1;
+  flashControls();showHint();hintShown=false;idx=0;show(0);playing=!RM;playBtn.textContent=playing?"⏸":"▶";
+});
+// smoke drifts from the very start; only the 線香 stick is revealed later
+startSmoke();running=true;
+
+</script>
+</body>
+</html>

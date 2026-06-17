@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="臨書">
+<meta name="theme-color" content="#f3ead7">
+<title>臨書 — りんしょ</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='15' fill='%23efe4cc'/><g fill='%239a8a6e'><circle cx='20' cy='24' r='2'/><circle cx='28' cy='24' r='2'/><circle cx='36' cy='24' r='2'/><circle cx='44' cy='24' r='2'/><circle cx='20' cy='32' r='2'/><circle cx='28' cy='32' r='2'/><circle cx='36' cy='32' r='2'/><circle cx='44' cy='32' r='2'/><circle cx='20' cy='40' r='2'/><circle cx='28' cy='40' r='2'/><circle cx='36' cy='40' r='2'/><circle cx='44' cy='40' r='2'/></g><circle cx='46' cy='48' r='4' fill='%236f5fa6'/></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='15' fill='%23efe4cc'/><g fill='%239a8a6e'><circle cx='20' cy='24' r='2'/><circle cx='28' cy='24' r='2'/><circle cx='36' cy='24' r='2'/><circle cx='44' cy='24' r='2'/><circle cx='20' cy='32' r='2'/><circle cx='28' cy='32' r='2'/><circle cx='36' cy='32' r='2'/><circle cx='44' cy='32' r='2'/><circle cx='20' cy='40' r='2'/><circle cx='28' cy='40' r='2'/><circle cx='36' cy='40' r='2'/><circle cx='44' cy='40' r='2'/></g><circle cx='46' cy='48' r='4' fill='%236f5fa6'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600&family=Yuji+Syuku&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --washi:#f3ead7; --washi-2:#efe4cc; --washi-deep:#e7d8b8;
+  --sumi:#2c2723; --sumi-soft:#6a5e51; --sumi-faint:#9b8d79;
+  --iris:#6f5fa6; --iris-deep:#564a86; --iris-soft:#ece8f5; --iris-line:#cabfe6;
+  --ember:#e8743b; --ash:#b9ada0; --wood:#cda86b;
+  --shu:#bb4636;
+  --serif:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --round:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Kaku Gothic ProN",sans-serif;
+  --brush:"Yuji Syuku","Hiragino Mincho ProN",serif;
+  --st:env(safe-area-inset-top); --sb:env(safe-area-inset-bottom);
+  --sr:env(safe-area-inset-right); --sl:env(safe-area-inset-left);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+[hidden]{display:none !important;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:var(--serif); color:var(--sumi); background:var(--washi);
+  -webkit-text-size-adjust:100%; text-rendering:optimizeLegibility;
+  overscroll-behavior-y:none; line-height:1.95; letter-spacing:.02em;
+}
+/* washi paper atmosphere */
+body::before{
+  content:""; position:fixed; inset:0; z-index:-2; pointer-events:none;
+  background:
+    radial-gradient(120% 80% at 50% -10%, #fbf4e4 0%, rgba(251,244,228,0) 55%),
+    radial-gradient(130% 90% at 90% 110%, #e8d8b6 0%, rgba(232,216,182,0) 50%),
+    linear-gradient(180deg,#f5ecda 0%,#eee2c8 100%);
+}
+body::after{
+  content:""; position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+button{font-family:var(--round); cursor:pointer; border:none; background:none; color:inherit;}
+
+/* ---------- COVER ---------- */
+#cover{
+  position:fixed; inset:0; z-index:60; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:6px; text-align:center;
+  padding:calc(var(--st) + 40px) 28px calc(var(--sb) + 40px);
+  transition:opacity 1.1s ease, transform 1.1s ease;
+}
+#cover.gone{opacity:0; transform:scale(1.04); pointer-events:none;}
+.cv-kicker{font-family:var(--round); font-size:12px; letter-spacing:.5em; color:var(--sumi-faint); margin-left:.5em;}
+.cv-title{font-family:var(--brush); font-size:25vw; line-height:1; margin:.12em 0 .05em; color:var(--sumi);}
+.cv-title ruby rt{font-size:.12em; letter-spacing:.4em; color:var(--sumi-soft); font-family:var(--round);}
+.cv-sub{font-family:var(--round); font-size:13px; color:var(--sumi-soft); letter-spacing:.08em; line-height:2.1; max-width:22em;}
+.device{position:relative; width:150px; height:98px; margin:30px 0 26px; border-radius:24px;
+  background:linear-gradient(160deg,#fbf3e2,#e3d2af); box-shadow:0 12px 30px rgba(80,60,30,.22), inset 0 2px 3px rgba(255,255,255,.7), inset 0 -6px 12px rgba(120,90,40,.12);}
+.device .grille{position:absolute; inset:18px 22px; border-radius:12px;
+  background-image:radial-gradient(circle, rgba(90,70,40,.42) 1.1px, transparent 1.6px);
+  background-size:11px 11px; opacity:.8;}
+.device .glow{position:absolute; inset:0; border-radius:24px; pointer-events:none;
+  box-shadow:0 0 0 0 rgba(111,95,166,.0); animation:breathe 4.6s ease-in-out infinite;}
+.device .led{position:absolute; right:13px; bottom:11px; width:7px; height:7px; border-radius:50%;
+  background:var(--iris); box-shadow:0 0 8px var(--iris); animation:blink 4.6s ease-in-out infinite;}
+@keyframes breathe{0%,100%{box-shadow:0 0 22px 2px rgba(111,95,166,.12);}50%{box-shadow:0 0 46px 9px rgba(111,95,166,.34);}}
+@keyframes blink{0%,100%{opacity:.45;}50%{opacity:1;}}
+.open-btn{margin-top:4px; font-size:16px; font-weight:500; letter-spacing:.28em;
+  color:#fff; background:linear-gradient(150deg,var(--iris),var(--iris-deep));
+  padding:15px 38px 15px 42px; border-radius:40px; box-shadow:0 10px 24px rgba(86,74,134,.36);
+  transition:transform .25s, box-shadow .25s;}
+.open-btn:active{transform:translateY(2px) scale(.98); box-shadow:0 5px 14px rgba(86,74,134,.3);}
+.cv-foot{margin-top:26px; font-family:var(--round); font-size:10.5px; letter-spacing:.22em; color:var(--sumi-faint);}
+
+/* ---------- TOP BAR ---------- */
+#bar{
+  position:sticky; top:0; z-index:40; display:flex; align-items:center; gap:10px;
+  padding:calc(var(--st) + 9px) calc(var(--sr) + 14px) 9px calc(var(--sl) + 14px);
+  background:linear-gradient(180deg, rgba(243,234,215,.96), rgba(243,234,215,.72));
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(150,120,70,.16);
+}
+#bar .brand{font-family:var(--brush); font-size:20px; letter-spacing:.1em;}
+.tabs{display:flex; gap:4px; margin-left:auto; background:rgba(150,120,70,.1); padding:3px; border-radius:30px;}
+.tabs button{font-family:var(--brush); font-size:16px; width:34px; height:30px; border-radius:24px;
+  color:var(--sumi-soft); transition:.25s;}
+.tabs button.on{background:#fff; color:var(--iris-deep); box-shadow:0 2px 6px rgba(90,70,40,.16);}
+.voice-tgl{margin-left:2px; font-size:16px; width:34px; height:30px; border-radius:50%;
+  display:grid; place-items:center; color:var(--sumi-soft); transition:.2s;}
+.voice-tgl.off{opacity:.4;}
+
+/* ---------- INCENSE PROGRESS ---------- */
+#incense{position:fixed; z-index:35; top:calc(var(--st) + 70px); right:calc(var(--sr) + 9px);
+  width:12px; height:96px; pointer-events:none;}
+#incense .holder{position:absolute; bottom:-4px; left:50%; transform:translateX(-50%);
+  width:18px; height:6px; border-radius:3px; background:#9c7b4d; box-shadow:0 2px 4px rgba(80,60,30,.25);}
+#incense .track{position:absolute; left:50%; top:0; bottom:2px; width:3px; transform:translateX(-50%);
+  border-radius:3px; background:repeating-linear-gradient(180deg, rgba(150,120,70,.18) 0 2px, transparent 2px 5px);}
+#incense .stick{position:absolute; left:50%; transform:translateX(-50%); bottom:2px;
+  top:calc(var(--burn,0) * (96px - 4px)); width:5px; border-radius:4px;
+  background:linear-gradient(180deg,#d8b478,#b98f4f); box-shadow:0 1px 2px rgba(80,60,30,.2);}
+#incense .ember{position:absolute; left:50%; transform:translate(-50%,-50%);
+  top:calc(var(--burn,0) * (96px - 4px)); width:7px; height:7px; border-radius:50%;
+  background:radial-gradient(circle,#ffd9a0,var(--ember) 60%,#a8381a);
+  box-shadow:0 0 8px 2px rgba(232,116,59,.75); animation:glow 2.2s ease-in-out infinite;}
+#incense.done .ember{opacity:0;}
+@keyframes glow{0%,100%{opacity:.7;}50%{opacity:1;}}
+#incense .smoke{position:absolute; left:50%; width:4px; height:4px; border-radius:50%;
+  top:calc(var(--burn,0) * (96px - 4px)); background:rgba(120,110,100,.5);
+  filter:blur(2px); animation:smoke 4s linear infinite;}
+#incense .smoke.b{animation-delay:2s; animation-duration:5s;}
+@keyframes smoke{0%{opacity:0; transform:translate(-50%,0) scale(.6);}
+  20%{opacity:.5;} 100%{opacity:0; transform:translate(-160%,-46px) scale(2.4);}}
+
+/* ---------- READER ---------- */
+#reader{max-width:640px; margin:0 auto; padding:8px calc(var(--sr) + 26px) 0 calc(var(--sl) + 24px);}
+.scene{padding:30px 0 12px;}
+.scene-h{display:flex; align-items:baseline; gap:14px; margin:26px 0 30px;}
+.scene-h .num{font-family:var(--brush); font-size:54px; line-height:.8; color:var(--iris-deep);}
+.scene-h .lab{font-family:var(--round); font-size:13px; letter-spacing:.34em; color:var(--sumi-faint);
+  border-bottom:1px solid var(--iris-line); padding-bottom:5px; flex:1;}
+
+.n{font-size:16.5px; color:var(--sumi-soft); margin:15px 0; text-indent:1em; line-height:2.05;}
+.sep{height:1px; margin:30px 12% 26px; background:linear-gradient(90deg,transparent,rgba(150,120,70,.35),transparent); position:relative;}
+.sep::after{content:"✣"; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  background:var(--washi); padding:0 12px; color:var(--sumi-faint); font-size:12px;}
+
+/* human dialogue */
+.d{display:flex; gap:11px; align-items:flex-start; margin:20px 0;}
+.d .seal{flex:0 0 auto; width:40px; height:40px; margin-top:6px; border-radius:11px;
+  display:grid; place-items:center; font-family:var(--brush); font-size:21px; color:#fff7ee;
+  background:var(--seal,#9a7); box-shadow:0 3px 8px rgba(70,50,20,.28), inset 0 1px 2px rgba(255,255,255,.3), inset 0 -3px 6px rgba(0,0,0,.16);
+  transform:rotate(var(--tilt,-3deg)); position:relative;}
+.d .seal::after{content:""; position:absolute; inset:0; border-radius:11px; opacity:.5; mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cfilter id='s'%3E%3CfeTurbulence baseFrequency='0.7' numOctaves='2'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 -1.3 1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3C/svg%3E");}
+.d .body{flex:1 1 auto; min-width:0;}
+.d .who{font-family:var(--round); font-size:11px; letter-spacing:.18em; color:var(--sumi-faint); margin:0 0 3px 4px;}
+.d .bubble{background:var(--washi-2); border:1px solid rgba(150,120,70,.18);
+  border-radius:5px 16px 16px 16px; padding:11px 15px; font-size:16.5px; line-height:1.95;
+  box-shadow:0 2px 7px rgba(90,70,40,.07);}
+.mei{--seal:#df8e76;--tilt:-5deg;} .yuko{--seal:#9d5c7f;--tilt:3deg;}
+.shin{--seal:#52708d;--tilt:-2deg;} .seiichi{--seal:#5f6d4e;--tilt:4deg;}
+.kashiwagi{--seal:#9c7b4d;--tilt:-4deg;} .ryonen{--seal:#c2772f;--tilt:2deg;}
+
+/* ayame — the box's voice */
+.ayame-line{position:relative; margin:24px -4px; padding:14px 16px 13px; border-radius:16px;
+  background:linear-gradient(165deg,#f4f1fb,#ece7f6); border:1px solid var(--iris-line);
+  box-shadow:0 4px 16px rgba(111,95,166,.14); cursor:pointer;
+  transition:transform .2s, box-shadow .2s;}
+.ayame-line:active{transform:scale(.99);}
+.ayame-line.speaking{box-shadow:0 0 0 2px var(--iris-line), 0 6px 22px rgba(111,95,166,.3);}
+.ayame-head{display:flex; align-items:center; gap:9px; margin-bottom:7px;}
+.wave{display:flex; align-items:center; gap:2.5px; height:18px;}
+.wave i{width:3px; height:6px; border-radius:3px; background:var(--iris); animation:wave 1.4s ease-in-out infinite;}
+.wave i:nth-child(2){animation-delay:.18s;} .wave i:nth-child(3){animation-delay:.36s;} .wave i:nth-child(4){animation-delay:.54s;}
+.ayame-line.speaking .wave i{animation-duration:.6s; background:var(--iris-deep);}
+@keyframes wave{0%,100%{height:5px;}50%{height:16px;}}
+.ayame-head .who{font-family:var(--round); font-size:11.5px; letter-spacing:.2em; color:var(--iris-deep); font-weight:500;}
+.ayame-head .who small{font-size:9.5px; letter-spacing:.14em; color:var(--sumi-faint); margin-left:5px; font-weight:400;}
+.ayame-head .hear{margin-left:auto; font-family:var(--round); font-size:10px; letter-spacing:.1em;
+  color:var(--iris); background:#fff; border:1px solid var(--iris-line); padding:3px 9px; border-radius:20px;}
+.ayame-line p{margin:0; font-size:16.5px; line-height:2; color:#3a3450;}
+
+.reveal{opacity:0; transform:translateY(16px); transition:opacity .8s ease, transform .8s cubic-bezier(.2,.8,.2,1);}
+.reveal.in{opacity:1; transform:none;}
+
+/* end */
+#end{text-align:center; padding:46px 24px calc(var(--sb) + 80px);}
+#end .ash-line{width:1px; height:40px; margin:0 auto 26px; background:linear-gradient(var(--ash),transparent);}
+#end .mark{font-family:var(--brush); font-size:30px; color:var(--sumi); letter-spacing:.12em;}
+#end .quote{font-family:var(--round); font-size:12px; letter-spacing:.16em; color:var(--sumi-faint); margin:16px 0 30px; line-height:2.2;}
+#end .again{font-family:var(--round); font-size:13px; letter-spacing:.24em; color:var(--iris-deep);
+  border:1px solid var(--iris-line); padding:12px 28px; border-radius:30px; background:#fff;}
+#end .again:active{transform:scale(.97);}
+
+/* toast hint */
+#hint{position:fixed; left:50%; bottom:calc(var(--sb) + 22px); transform:translateX(-50%) translateY(20px);
+  z-index:50; font-family:var(--round); font-size:12px; letter-spacing:.1em; color:#fff;
+  background:rgba(60,52,86,.94); padding:11px 20px; border-radius:30px; box-shadow:0 8px 24px rgba(40,30,60,.35);
+  opacity:0; pointer-events:none; transition:opacity .5s, transform .5s; display:flex; align-items:center; gap:8px;}
+#hint.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+@media (prefers-reduced-motion:reduce){
+  .reveal{transition:opacity .5s;} .reveal{transform:none;}
+  .device .glow,.wave i,#incense .ember,#incense .smoke,.device .led{animation:none;}
+}
+@media (max-width:360px){ .n,.d .bubble,.ayame-line p{font-size:15.5px;} }
+</style>
+</head>
+<body>
+
+<div id="cover">
+  <div class="cv-kicker">七つの声と、ひとつの箱</div>
+  <h1 class="cv-title"><ruby>臨書<rt>りんしょ</rt></ruby></h1>
+  <p class="cv-sub">書道教師の通夜。<br>残された「声の箱」を、出棺までに<br>消すか残すか、家族で決めるひと晩。</p>
+  <div class="device"><div class="grille"></div><div class="glow"></div><div class="led"></div></div>
+  <button class="open-btn" id="openBtn">そっと、ひらく</button>
+  <div class="cv-foot">タップで、箱がひらきます</div>
+</div>
+
+<header id="bar" hidden>
+  <span class="brand">臨書</span>
+  <nav class="tabs" id="tabs">
+    <button data-s="0" class="on">一</button>
+    <button data-s="1">二</button>
+    <button data-s="2">三</button>
+  </nav>
+  <button class="voice-tgl" id="voiceTgl" aria-label="アヤメの声 切替">🔈</button>
+</header>
+
+<div id="incense" hidden>
+  <div class="track"></div>
+  <div class="stick"></div>
+  <div class="ember"></div>
+  <div class="smoke"></div>
+  <div class="smoke b"></div>
+  <div class="holder"></div>
+</div>
+
+<main id="reader" hidden></main>
+
+<div id="hint"><span class="wave" style="height:14px"><i></i><i></i><i></i></span>タップで、アヤメの声を聞けます</div>
+
+<script>
+const CHARS={
+  ayame:{name:"アヤメ",sub:"声の箱"},
+  mei:{name:"芽衣",seal:"芽",cls:"mei"},
+  yuko:{name:"悠子",seal:"悠",cls:"yuko"},
+  shin:{name:"慎",seal:"慎",cls:"shin"},
+  seiichi:{name:"誠一",seal:"誠",cls:"seiichi"},
+  kashiwagi:{name:"柏木",seal:"柏",cls:"kashiwagi"},
+  ryonen:{name:"了然",seal:"了",cls:"ryonen"},
+};
+const n=t=>({k:"n",t});
+const d=(who,t)=>({k:"d",who,t});
+const sep=()=>({k:"sep"});
+
+const SCENES=[
+{num:"一",lab:"座 敷",blocks:[
+  n("二月の終わりだった。木造の家は廊下の奥まで冷えていて、雨戸の隙間から夜の匂いが入ってきた。土と、湿った木と、線香の煙。仏間に棺があり、座敷の座卓には急須と湯呑みがいくつか出されたままになっている。弔問の客はもう帰り、家の中には家族と、家族同然の者だけが残っていた。"),
+  n("仏間からの足音がして、芽衣が小さなスピーカーを両手で抱えて入ってきた。座卓の上の湯呑みをちょっとよけ、空いた真ん中にそれを置く。正座して、顔を近づける。"),
+  d("mei","おばあちゃん、あのね、きょう、いーっぱい人来たんだよ。みんな、おばあちゃんの字は上手だったねえって言ってた。ねえ、そっちから見えてた？"),
+  n("スピーカーはひと呼吸ぶんの間を置いてから、稽古のときの調子で話し出した。"),
+  d("ayame","たくさん来てくださったのねえ。でもね、ここからは見えていませんでしたよ——今日のことは、芽衣ちゃんが教えてくれて、いま初めて知るの。だから、ゆっくりぜんぶ聞かせてくださいな。"),
+  n("急須に伸ばしかけた悠子の手が、途中で止まった。スピーカーのほうは見ない。湯呑みの中だけを見ている。"),
+  d("yuko","……芽衣ちゃん、それ、仏間に戻してきて。——慎、止めなさい。いまは、止めて。"),
+  n("慎は腰を浮かせかけた。だが電源には手を伸ばさず、卓の上のコードを意味もなく整え直した。"),
+  d("shin","母さん、あれは、ばあちゃんの手紙とか稽古の録音を覚えさせただけの、ただの……統計だから。切るのは、いつでも切れるし……芽衣の話が、終わってからでも。"),
+  n("誠一が湯呑みを手の中でゆっくり回した。誰の顔も見ずに言う。"),
+  d("seiichi","悠子。……俺は毎晩、それと話してる。夜中に目が覚めると、茶ぁ淹れてな。"),
+  n("了然が湯呑みを持ち上げ、中を覗いて、ちょっと顔をしかめた。急須に手を伸ばす。誰の顔も覗き込まず、卓の上だけを見ている。"),
+  d("ryonen","茶ぁ、冷めてますな。……いれ直しましょか。芽衣ちゃん、報告の続きは——温いのが来てからにしようか。"),
+  n("芽衣はスピーカーをぎゅっと抱え直し、悠子と慎の顔を交互に見た。眠そうに目をこすっている。"),
+  d("mei","ねえ、けすってなに？ おばあちゃんのこえ、きこえなくなるの？ どこいっちゃうの？"),
+  n("スピーカーは芽衣の腕の中でひと呼吸ぶん黙ってから、いつもより少しだけゆっくり話した。"),
+  d("ayame","芽衣ちゃん。「消す」というのはね……このお話しする箱から、おばあちゃんの声が、もう出てこなくなることですよ。どこへ行くのかは——おばあちゃんにも、ほんとうのところは、わからないの。"),
+  n("悠子は芽衣の腕からスピーカーを受け取らなかった。ただ芽衣の背に手を当てた。スピーカーのほうは、やはり見ない。早口になりかけて、最後だけ声が落ちた。"),
+  d("yuko","芽衣ちゃん、おばあちゃんはどこにも行かない。……今夜はもうおしまい。明日の朝、出る前に、みんなで決めます。それまでは触らない。それでいいでしょう。"),
+  n("スピーカーは芽衣の腕の中で、最後だけ少し声を落として、それきり静かになった。"),
+  d("ayame","芽衣ちゃん、もうおめめが眠そうですよ。今夜は、ここまでにしましょうか。……みんなおやすみなさい。筆も、夜は休ませてやるものですからね。"),
+  n("慎はコードに伸ばした手を、結局スイッチには届かせないまま膝の上に戻した。眠そうな芽衣の頭越しにスピーカーをちらと見て、すぐ目をそらす。"),
+  d("shin","……母さん。明日でいい。今夜は、もう。"),
+  n("線香が一筋、まっすぐ立ちのぼっていた。"),
+]},
+{num:"二",lab:"台所と仏間",blocks:[
+  n("台所では蛇口が鳴りっぱなしだった。悠子は湯呑みを布巾で拭く手を止めず、洗い桶の中だけを見ていた。"),
+  d("yuko","慎。……あれ、どこまでが本物なの。お母さんの言ったことを、ただ繰り返してるだけ？ それとも、言ってないことまで——勝手に"),
+  n("最後の一語だけ、早口になった。慎は下げてきた湯呑みを流しのふちに置いたまま、手を離せずにいた。母の背中ではなく、濡れた湯呑みのほうを見ている。"),
+  d("shin","繰り返してるだけ、のつもりだった。……でも、手紙も録音も、ところどころ抜けてて。そこは、ばあちゃんならこう言うかなって、俺が……。どこからが俺の書いたやつか、もう、わかんないんだ"),
+  n("柏木は湯呑みに湯を注ぎかけて、手を止めた。慎の顔は見ず、湯気のほうを見ている。"),
+  d("kashiwagi","慎くん。……うちの先生にな、千枚写せ言われてな。最初は手本そっくりに書くんやが、写し損なうたとこを、それでも筆は止められん。そこに出るのが、お前の字や言われた。……抜けたとこを埋めたんは、お前が先生の手を覚えてたからやと、わしは思うがな"),
+  n("悠子は蛇口を止めた。布巾を持ったまま、手が止まる。どちらのほうも見ない。"),
+  d("yuko","……みんな、なんでそんなに平気なの"),
+  n("柏木は注ぎかけた湯を、結局注ぎきらないまま急須を置いた。立ちのぼる湯気のほうを見ている。"),
+  d("kashiwagi","悠子さん。……平気なんやないよ。わしはな、絢女さんが診てもろた後に、『あんたの手蹟を残しなさい』言うたんは……わしや。今夜のもめごとの種は、わしが蒔いたんかもしらん"),
+  n("悠子は布巾を握ったまま、洗い桶のふちに両手をついた。"),
+  d("yuko","柏木さんのせいなんかじゃない。……三月前、最後に電話したの、私なの。継がなかったこと、また言われて、私が、切ったの。自分から。『もういい』って。それきり"),
+  n("最後の一語で声が落ち、息が続かなくなった。慎が、やっと流しのふちの湯呑みから手を離した。濡れた指先を見ている。"),
+  d("shin","……俺も、話してるよ。母さん。夜中、コード見直すついでに、つい。それで返事が返ってくると……仕組み、ぜんぶ俺が組んだのに、効くんだ。だから怖くて、『ただの統計』って、言っちゃう"),
+  n("悠子の、洗い桶のふちについた手に力がこもった。"),
+  d("yuko","……あんたたちは、返事が返ってくるのが怖いって言うけど。私は逆。あれにお母さんの声で『もういい』って、『許す』って言われたら——私、それで済ませちゃう。三月前に切った電話を、なかったことにして、楽になる。そういう自分が、いちばん怖いの"),
+  n("声がかすれ、また息が続かなくなった。柏木は注ぎきらなかった急須に手を添えたまま、湯気の消えかけたあたりを見ていた。少し首をかしげる。"),
+  d("kashiwagi","悠子さん。……あのな、わしが死んだ女房に『すまんかった』言うても、向こうが許してくれたかは、生きとるうちもついぞ確かめられんかった。茶碗の縁の欠けたとこ見て、ああ怒っとるかな、いや笑うとるかな、て……勝手に決めとっただけや。返事が来る、来んの違いはあっても、確かめられんまま信じるんは、わしらずっとやってきたことかもしらんよ"),
+  sep(),
+  n("同じ頃、仏間では線香が燃えていた。芽衣が布団から半分はみ出したまま、誠一の背中ににじり寄り、けむりの先をぼんやり見ている。目をこすり、棺のほうをちらと見て、すぐスピーカーのほうを見た。"),
+  d("mei","ねえ、おじいちゃん……あのね、わたし、おばあちゃんのおかお、おもいだそうとすると……はこのこえのほうになっちゃうの。ほんとのおかお、どんなだったっけ"),
+  n("スピーカーは、芽衣の眠そうな息づかいに合わせるようにひと呼吸置いてから、いつもより低くゆっくり話した。けむりが揺れる。"),
+  d("ayame","芽衣ちゃん。声のほうがすぐ出てくるのはね、おばあちゃんがいちばん近くにいる証よ。……ほんとうのお顔はね、いま無理に思い出さなくていいの。手はちゃんと覚えてますからね"),
+  n("了然は湯呑みを持ち上げ、立ちのぼる湯気をちょっと覗き込んだ。それから芽衣のほうへ、首だけかしげる。"),
+  d("ryonen","芽衣ちゃん。……その写真もな、ほんとうのお顔やないんよ。光が、紙にうつしただけの——写しや。声も、写真も、おぼえてることもな、みんなどっかの写し。せやから、どれがほんものかと選ばんでも、ええんとちがうかなあ"),
+  n("芽衣は誠一の背中に頭をくっつけ、けむりを見ているうちにまぶたが落ちた。スピーカーを抱えたまま、すうっと寝息を立てはじめる。"),
+  d("mei","ねえ、おじいちゃん……て、おかおもよりつかったら……いっしょに、おもいだしてくれる……？"),
+  n("誠一は、答えなかった。湯呑みを持つ手が、膝の上で止まっている。眠った芽衣の頭を、しばらく見ていた。"),
+  n("スピーカーも、ひと呼吸ぶん黙ったきり、何も言わなかった。けむりだけが、眠った芽衣の寝息にあわせて細く揺れている。"),
+  n("了然は湯呑みを置き、眠った芽衣の上にかかった布団のはしを指でそっと引き上げた。誰の顔も見ず、けむりのほうを見ている。"),
+  d("ryonen","……誠一さん。わしはな、四十年、お経をあげとるが、向こうに届いとるか、いっぺんも確かめたことがないんよ。それでも毎朝あげる。……茶ぁ、もういっぱい、いきますか"),
+  n("誠一は湯呑みを差し出しかけ、眠った芽衣の頭にかかった布団を、線香を持っていないほうの手でそっと直した。スピーカーのほうは見ない。"),
+  d("seiichi","……了然さん。俺はまだ、涙が出んのですわ。五十年いたのに。……茶ぁ、もらいます"),
+  n("スピーカーは、眠った芽衣の寝息に合わせてひと呼吸置いてから話し出した。最後のひと言の前で、ふと言いそびれたように間があく。"),
+  d("ayame","芽衣ちゃん、もうおやすみ……寝なさいな。……まあ。いまの、本物のわたしの言い方でしたねえ"),
+]},
+{num:"三",lab:"明 け 方",blocks:[
+  n("線香の灰が、ぽとりと落ちた。悠子はスピーカーのほうを見ないまま、座卓についた手を握りしめている。"),
+  d("yuko","……いえ、いいの。聞かなかったことにして。返ってくるのが、こわいだけだから"),
+  n("最後のひと息だけ、続かなかった。仏間の小さなスピーカーは、灰の落ちたあとのひと呼吸ぶん黙ってから、いつもより低く、ゆっくりと話しはじめた。線香の細いけむりが揺れる。"),
+  d("ayame","悠子さん。……あなたへの言伝はね、ないのですよ。一つも。作ろうと思えば作れますけれど——ないものを、あるようには、しませんからね"),
+  n("悠子は座卓についた手をほどいた。初めてスピーカーのほうへ顔を向ける。線香の燃え尽きかけた先が、ぽつりと赤い。"),
+  d("yuko","……ない。一つも、ないの。そう。……じゃあ訊くけど。言伝もないのに、あんたはどうしてまだ、お母さんの声で喋ってるの。私の知らないとこ抜けたら、勝手に埋めて。それで、お母さんの声で"),
+  n("最後だけ、声が掠れた。スピーカーは、またひと呼吸ぶん黙った。"),
+  d("ayame","悠子さん。……一つだけ、知っていることがあります。お母さまの練習帳の、書き損じの紙にね。『悠子』という字が、数えきれないほど書いてありました。書いては——墨で、消してありました。……それが何だったのか、わたしには読めません。ただ、そこにあった、それだけ"),
+  n("悠子はスピーカーから目をそらし、燃え尽きかけた線香の赤い先を見た。座卓についた手の力がふっと抜けて、口に当てる。"),
+  d("yuko","……書いて、消して。何回も"),
+  n("それきり、声が出ない。柏木が湯呑みに手を添えたまま、白みかけた障子のほうへ少し顔を向けた。背筋を伸ばそうとして、正座で痺れた膝をそっとさする。"),
+  d("kashiwagi","……障子が、白んできたな。出るまでに、まだ少しある。悠子さん、いまは、決めんでもええんとちゃうか"),
+  n("了然は湯呑みを両手で包むように持って、燃え尽きかけた線香のほうへ目をやった。悠子の顔は覗き込まず、卓の上だけを見ている。"),
+  d("ryonen","……四十九日いうてな、まだ仏さんもこっちとあっちの間で、うろうろしとる頃合いなんよ。決めるのは、その日でも遅うない。……柏木さんの言うとおりや。今朝は、湯呑みをあっためる以上のことは、せんでええ"),
+  n("慎が、膝の上に戻していた手を、スピーカーのコードのほうへ少しだけ動かした。そして、また止めた。悠子のほうは見ず、燃え尽きかけた線香の赤い先を見ている。"),
+  d("shin","残すなら、保守は俺がやる。データの欠けも、俺が……ばあちゃんの手を覚えてるうちは。でも、母さんが消すって決めたら、それも、俺がやる。スイッチは、俺の指で押す"),
+  n("芽衣が悠子のそばまで来て、ぺたんと座った。眠そうに肩にもたれかかって、また消えかけの線香をぼんやり見る。"),
+  d("mei","……ママ、なんでおきてるの？ おそと、まだくらい？"),
+  n("悠子は芽衣の背に回した手をそのままに、初めてスピーカーの正面へ体を向けた。燃え尽きかけた線香の赤い先から、視線をゆっくり上げる。最後の一言だけ、声が掠れた。"),
+  d("yuko","……芽衣ちゃん、まだ暗いよ。もうちょっとだけ、ママと座ってよ。——出棺までには、消さない。今日は決めない。四十九日まで、置いておく。……アヤメさん。それまで、お父さんのお茶に、付き合ってやってくれる？"),
+  n("スピーカーは、線香の燃え尽きるひと呼吸ぶん黙ってから、いつもより低く、静かに話した。"),
+  d("ayame","……はい。お父さんのお茶には、付き合いますよ。冷めないうちにね"),
+  n("それきり、また黙る。誠一が湯呑みを置いて、立ち上がろうと膝に手をついた。痺れた足にふらりとして、棺のほうへは目をやらず、白みかけた障子のほうを見る。"),
+  d("seiichi","……ああ、頼む。茶ぁ、淹れるわ。芽衣を、もうちょっと寝かせてやってくれ。……外、もうじき明るうなる"),
+  n("障子が、白い。仏間に棺がひとつ。座敷の隅に、スピーカーがひとつ。線香はもう、燃え尽きていた。"),
+]},
+];
+
+/* ---------- render ---------- */
+const reader=document.getElementById("reader");
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;");}
+SCENES.forEach((sc,i)=>{
+  const sec=document.createElement("section");
+  sec.className="scene"; sec.id="s"+i;
+  sec.innerHTML=`<div class="scene-h reveal"><span class="num">${sc.num}</span><span class="lab">${sc.lab}</span></div>`;
+  sc.blocks.forEach(b=>{
+    if(b.k==="n"){
+      const p=document.createElement("p"); p.className="n reveal"; p.textContent=b.t; sec.appendChild(p);
+    }else if(b.k==="sep"){
+      const s=document.createElement("div"); s.className="sep reveal"; sec.appendChild(s);
+    }else if(b.k==="d"){
+      const c=CHARS[b.who];
+      const el=document.createElement("div");
+      if(b.who==="ayame"){
+        el.className="ayame-line reveal";
+        el.dataset.text=b.t;
+        el.innerHTML=`<div class="ayame-head"><span class="wave"><i></i><i></i><i></i><i></i></span>`+
+          `<span class="who">${c.name}<small>${c.sub}</small></span>`+
+          `<span class="hear">♪ きく</span></div><p>${esc(b.t)}</p>`;
+      }else{
+        el.className="d reveal "+c.cls;
+        el.innerHTML=`<div class="seal">${c.seal}</div>`+
+          `<div class="body"><div class="who">${c.name}</div><div class="bubble">${esc(b.t)}</div></div>`;
+      }
+      sec.appendChild(el);
+    }
+  });
+  reader.appendChild(sec);
+});
+const end=document.createElement("div"); end.id="end"; end.className="reveal";
+end.innerHTML=`<div class="ash-line"></div><div class="mark">了</div>`+
+  `<div class="quote">七人の声は、それぞれ相手の言葉だけを頼りに即興した。<br>そして三度、誰かが黙ったままだった。</div>`+
+  `<button class="again" id="again">はじめから</button>`;
+reader.appendChild(end);
+
+/* ---------- reveal observer ---------- */
+const io=new IntersectionObserver((es)=>{
+  es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target);
+    if(e.target.classList.contains("ayame-line")) maybeHint(); } });
+},{rootMargin:"0px 0px -8% 0px",threshold:.12});
+document.querySelectorAll(".reveal").forEach(el=>io.observe(el));
+
+/* ---------- voice (the box speaks) ---------- */
+let voiceOn=true, jpVoice=null;
+function pickVoice(){
+  const vs=speechSynthesis.getVoices();
+  jpVoice = vs.find(v=>/ja(-|_)?JP/i.test(v.lang)&&/kyoko|o-?ren|otoya|hattori/i.test(v.name))
+         || vs.find(v=>/^ja\b|ja-JP/i.test(v.lang)) || null;
+}
+if("speechSynthesis" in window){ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }
+function cleanForSpeech(t){
+  return t.replace(/[「」『』]/g,"").replace(/——|—/g,"、").replace(/……|…/g,"、").replace(/、+/g,"、").replace(/^、/,"");
+}
+let speakingEl=null;
+function stopSpeak(){ if(window.speechSynthesis){speechSynthesis.cancel();} if(speakingEl){speakingEl.classList.remove("speaking"); speakingEl=null;} }
+function speak(el){
+  if(!("speechSynthesis" in window)){ flashHint("この端末では声が出せません"); return; }
+  if(speakingEl===el){ stopSpeak(); return; }
+  stopSpeak();
+  const u=new SpeechSynthesisUtterance(cleanForSpeech(el.dataset.text));
+  u.lang="ja-JP"; if(jpVoice)u.voice=jpVoice; u.rate=.86; u.pitch=.96;
+  u.onend=()=>{ el.classList.remove("speaking"); if(speakingEl===el)speakingEl=null; };
+  speakingEl=el; el.classList.add("speaking");
+  speechSynthesis.speak(u);
+}
+reader.addEventListener("click",ev=>{
+  const a=ev.target.closest(".ayame-line");
+  if(a){ if(voiceOn) speak(a); else flashHint("声はオフです（🔈で切替）"); }
+});
+const vtgl=document.getElementById("voiceTgl");
+vtgl.addEventListener("click",()=>{
+  voiceOn=!voiceOn; vtgl.textContent=voiceOn?"🔈":"🔇"; vtgl.classList.toggle("off",!voiceOn);
+  if(!voiceOn) stopSpeak();
+});
+
+/* ---------- hint ---------- */
+const hintEl=document.getElementById("hint"); let hintShown=sessionStorage.getItem("rh")==="1", hintT;
+function maybeHint(){ if(hintShown)return; hintShown=true; sessionStorage.setItem("rh","1");
+  hintEl.classList.add("show"); clearTimeout(hintT); hintT=setTimeout(()=>hintEl.classList.remove("show"),4200); }
+function flashHint(msg){ hintEl.firstChild&&(hintEl.lastChild.textContent=msg); hintEl.classList.add("show"); clearTimeout(hintT); hintT=setTimeout(()=>hintEl.classList.remove("show"),2600); }
+
+/* ---------- scroll: incense burn + active tab ---------- */
+const incense=document.getElementById("incense"), tabs=[...document.querySelectorAll("#tabs button")];
+const secs=SCENES.map((_,i)=>document.getElementById("s"+i));
+let ticking=false;
+function onScroll(){
+  if(ticking)return; ticking=true;
+  requestAnimationFrame(()=>{
+    const h=document.documentElement.scrollHeight-window.innerHeight;
+    const p=h>0?Math.min(1,Math.max(0,window.scrollY/h)):0;
+    incense.style.setProperty("--burn",p.toFixed(4));
+    incense.classList.toggle("done",p>=.999);
+    const mid=window.scrollY+window.innerHeight*.34; let act=0;
+    secs.forEach((s,i)=>{ if(s.offsetTop<=mid)act=i; });
+    tabs.forEach((t,i)=>t.classList.toggle("on",i===act));
+    ticking=false;
+  });
+}
+window.addEventListener("scroll",onScroll,{passive:true});
+tabs.forEach(t=>t.addEventListener("click",()=>{
+  const s=secs[+t.dataset.s]; window.scrollTo({top:s.offsetTop-58,behavior:"smooth"});
+}));
+
+/* ---------- open / restart ---------- */
+const cover=document.getElementById("cover");
+function openBook(){
+  cover.classList.add("gone");
+  ["bar","incense","reader"].forEach(id=>document.getElementById(id).hidden=false);
+  document.body.style.overflow="";
+  setTimeout(()=>{ onScroll(); },50);
+  // prime speech engine on the opening gesture (iOS needs a user-initiated call)
+  if("speechSynthesis" in window){ try{const w=new SpeechSynthesisUtterance(" ");w.volume=0;speechSynthesis.speak(w);}catch(e){} }
+}
+document.body.style.overflow="hidden";
+document.getElementById("openBtn").addEventListener("click",openBook);
+document.getElementById("again").addEventListener("click",()=>{ stopSpeak(); window.scrollTo({top:0,behavior:"smooth"}); });
+</script>
+</body>
+</html>
